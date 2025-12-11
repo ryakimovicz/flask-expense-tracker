@@ -1,7 +1,9 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, redirect, url_for, jsonify, Response
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import extract
 from datetime import datetime
+import csv
+import io
 
 # --- Configuración ---
 app = Flask(__name__)
@@ -45,7 +47,7 @@ def home():
         except Exception as e:
             return f"Ocurrió un error al guardar: {e}"
 
-    # Lógica de Filtrado para la Tabla
+    # Filtros
     filter_year = request.args.get('year', type=int)
     filter_month = request.args.get('month', type=int)
 
@@ -57,12 +59,11 @@ def home():
 
     expenses = query.order_by(Expense.date.desc()).all()
 
-    # Datos para el selector de fechas
+    # Datos para selectores
     all_dates = db.session.query(Expense.date).all()
     available_dates = set()
     for (d,) in all_dates:
         available_dates.add((d.year, d.month))
-    
     available_dates = sorted(list(available_dates), reverse=True)
 
     month_names = {
@@ -87,23 +88,19 @@ def delete_expense(id):
     except Exception as e:
         return f"Error al eliminar: {e}"
 
-# API JSON
 @app.route('/api/chart-data')
 def chart_data():
-    # 1. Lee los mismos filtros de la URL
     filter_year = request.args.get('year', type=int)
     filter_month = request.args.get('month', type=int)
 
     query = Expense.query
 
-    # 2. Aplica el filtro si existe
     if filter_year and filter_month:
         query = query.filter(extract('year', Expense.date) == filter_year, 
                              extract('month', Expense.date) == filter_month)
     
     expenses = query.all()
     
-    # 3. Procesa los datos filtrados
     data = {}
     for expense in expenses:
         if expense.category in data:
@@ -115,6 +112,41 @@ def chart_data():
     values = list(data.values())
     
     return jsonify({'labels': labels, 'data': values})
+
+# Exportar a CSV
+@app.route('/export')
+def export_data():
+    filter_year = request.args.get('year', type=int)
+    filter_month = request.args.get('month', type=int)
+
+    query = Expense.query
+
+    if filter_year and filter_month:
+        query = query.filter(extract('year', Expense.date) == filter_year, 
+                             extract('month', Expense.date) == filter_month)
+        filename = f"gastos_{filter_year}_{filter_month}.csv"
+    else:
+        filename = "gastos_totales.csv"
+
+    expenses = query.order_by(Expense.date.desc()).all()
+
+    # Crea el archivo CSV en memoria
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    # Escribir encabezados
+    writer.writerow(['ID', 'Fecha', 'Descripción', 'Categoría', 'Monto'])
+    
+    # Escribir filas
+    for expense in expenses:
+        writer.writerow([expense.id, expense.date, expense.description, expense.category, expense.amount])
+    
+    # Prepara la respuesta de descarga
+    return Response(
+        output.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-Disposition": f"attachment;filename={filename}"}
+    )
 
 if __name__ == '__main__':
     app.run(debug=True)

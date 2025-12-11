@@ -14,12 +14,10 @@
             <h1>💰 Control de Gastos</h1>
         </header>
 
-        <!-- Sección de Gráfico -->
         <section class="chart-section">
             <canvas id="expenseChart"></canvas>
         </section>
 
-        <!-- Formulario -->
         <section class="form-section">
             <form action="/" method="POST">
                 <div class="form-group">
@@ -48,31 +46,37 @@
             </form>
         </section>
 
-        <!-- BARRA DE FILTROS (NUEVO) -->
+        <!-- Barra de Filtros y Exportación -->
         <section class="filter-section">
-            <form action="/" method="GET" class="filter-form">
-                <span class="filter-label">Filtrar por período:</span>
-                <select name="period" onchange="this.form.submit()">
-                    <option value="">Ver Todo el Historial</option>
-                    {% for year, month in available_dates %}
-                        <option value="{{ year }}-{{ month }}" 
-                            {% if sel_year == year and sel_month == month %}selected{% endif %}>
-                            {{ month_names[month] }} {{ year }}
-                        </option>
-                    {% endfor %}
-                </select>
+            <div class="filter-left">
+                <form action="/" method="GET" class="filter-form">
+                    <span class="filter-label">Filtrar:</span>
+                    <select name="period" onchange="this.form.submit()">
+                        <option value="">Ver Todo</option>
+                        {% for year, month in available_dates %}
+                            <option value="{{ year }}-{{ month }}" 
+                                {% if sel_year == year and sel_month == month %}selected{% endif %}>
+                                {{ month_names[month] }} {{ year }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    
+                    <input type="hidden" name="year" id="inputYear">
+                    <input type="hidden" name="month" id="inputMonth">
+                </form>
                 
-                <input type="hidden" name="year" id="inputYear">
-                <input type="hidden" name="month" id="inputMonth">
-            </form>
-            
-            {% if sel_year %}
-                <a href="/" class="btn-reset">Borrar Filtro</a>
-            {% endif %}
+                {% if sel_year %}
+                    <a href="/" class="btn-reset">Borrar</a>
+                {% endif %}
+            </div>
+
+            <!-- Botón de Exportar -->
+            <a href="{{ url_for('export_data', year=sel_year, month=sel_month) }}" class="btn-export">
+                📄 Exportar CSV
+            </a>
         </section>
 
         <script>
-            // Pequeño script para manejar el select del filtro
             document.querySelector('select[name="period"]').addEventListener('change', function() {
                 const val = this.value;
                 if (val) {
@@ -81,12 +85,11 @@
                     document.getElementById('inputMonth').value = month;
                     this.removeAttribute('name'); 
                 } else {
-                    window.location.href = '/';
+                    window.location.href = '/'; 
                 }
             });
         </script>
 
-        <!-- Tabla -->
         <section class="table-section">
             <table>
                 <thead>
@@ -114,11 +117,7 @@
                     {% else %}
                         <tr>
                             <td colspan="5" style="text-align:center; padding: 20px; color: #6b7280;">
-                                {% if sel_year %}
-                                    No hay gastos en este período.
-                                {% else %}
-                                    No hay gastos registrados aún.
-                                {% endif %}
+                                No hay gastos registrados.
                             </td>
                         </tr>
                     {% endfor %}

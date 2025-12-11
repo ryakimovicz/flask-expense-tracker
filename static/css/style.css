@@ -129,7 +129,6 @@ th {
     border-radius: 8px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     margin-bottom: 30px;
-    /* Centrar y limitar tamaño */
     display: flex;
     justify-content: center;
     max-height: 400px;
@@ -163,10 +162,16 @@ th {
     align-items: center;
     background-color: #e5e7eb;
     padding: 10px 15px;
-    border-radius: 8px 8px 0 0; /* Redondeado solo arriba */
-    margin-bottom: 0; /* Pegado a la tabla */
+    border-radius: 8px 8px 0 0;
+    margin-bottom: 0;
     border: 1px solid var(--border);
     border-bottom: none;
+}
+
+.filter-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
 }
 
 .filter-form {
@@ -188,11 +193,42 @@ th {
     font-weight: 600;
 }
 
+/* Botón Exportar (Estilo Excel) */
+.btn-export {
+    background-color: #10b981;
+    color: white;
+    text-decoration: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.btn-export:hover {
+    background-color: #059669;
+}
+
+/* Ajuste tabla */
+.table-section {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+
+.btn-reset {
+    font-size: 0.85rem;
+    color: #ef4444;
+    text-decoration: none;
+    font-weight: 600;
+}
+
 .btn-reset:hover {
     text-decoration: underline;
 }
 
-/* Ajuste para que la tabla se pegue al filtro */
 .table-section {
     border-top-left-radius: 0;
     border-top-right-radius: 0;
