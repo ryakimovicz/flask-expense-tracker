@@ -12,9 +12,13 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
-BUDGET_LIMIT = 50000.0 
-
 # --- Modelos ---
+
+# Configuración de Usuario
+class UserSettings(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    budget_limit = db.Column(db.Float, nullable=False, default=50000.0)
+
 class Expense(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.Date, nullable=False, default=datetime.utcnow)
@@ -28,6 +32,12 @@ class Expense(db.Model):
 # --- Inicialización ---
 with app.app_context():
     db.create_all()
+    
+    if not UserSettings.query.first():
+        default_settings = UserSettings(budget_limit=50000.0)
+        db.session.add(default_settings)
+        db.session.commit()
+        print("⚙️ Configuración inicial creada.")
 
 # --- Rutas ---
 @app.route('/', methods=['GET', 'POST'])
@@ -61,15 +71,15 @@ def home():
 
     expenses = query.order_by(Expense.date.desc()).all()
 
-    # --- CÁLCULO DE PRESUPUESTO ---
-    total_spent = sum(e.amount for e in expenses)
-    budget_limit = BUDGET_LIMIT
+    # --- CÁLCULO DE PRESUPUESTO (Desde Base de Datos) ---
+    settings = UserSettings.query.get(1)
+    budget_limit = settings.budget_limit if settings else 0
     
-    # Calcular porcentaje
+    total_spent = sum(e.amount for e in expenses)
+    
     percentage = (total_spent / budget_limit * 100) if budget_limit > 0 else 0
-    percentage = min(percentage, 100)
+    percentage = min(percentage, 100) 
 
-    # Determinar color
     if percentage < 50:
         progress_color = "bg-green-500"
     elif percentage < 80:
@@ -103,12 +113,16 @@ def home():
 # Actualizar Presupuesto
 @app.route('/update_budget', methods=['POST'])
 def update_budget():
-    global BUDGET_LIMIT
     try:
         new_limit = float(request.form['budget'])
-        BUDGET_LIMIT = new_limit
+        
+        settings = UserSettings.query.get(1)
+        if settings:
+            settings.budget_limit = new_limit
+            db.session.commit()
+            
     except:
-        pass
+        pass 
     return redirect(url_for('home'))
 
 @app.route('/delete/<int:id>', methods=['POST'])
