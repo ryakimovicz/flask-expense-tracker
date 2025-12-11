@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Gastos</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <h1>📊 Mis Gastos</h1>
+    
+    <!-- Aquí mostraremos la lista de gastos -->
+    <ul>
+        {% for expense in expenses %}
+            <li>
+                <strong>{{ expense.date.strftime('%Y-%m-%d') }}</strong> - 
+                {{ expense.description }} ({{ expense.category }}): 
+                ${{ expense.amount }}
+            </li>
+        {% else %}
+            <li>No hay gastos registrados aún.</li>
+        {% endfor %}
+    </ul>
+
+</body>
+</html>
