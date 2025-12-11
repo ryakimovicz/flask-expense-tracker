@@ -28,7 +28,6 @@ with app.app_context():
 # --- Rutas ---
 @app.route('/', methods=['GET', 'POST'])
 def home():
-    # 1. Lógica POST (Agregar Gasto)
     if request.method == 'POST':
         try:
             date_str = request.form['date']
@@ -46,34 +45,26 @@ def home():
         except Exception as e:
             return f"Ocurrió un error al guardar: {e}"
 
-    # 2. Lógica GET (Mostrar y Filtrar)
-    
-    # Obtener parámetros de filtro de la URL (si existen)
+    # Lógica de Filtrado para la Tabla
     filter_year = request.args.get('year', type=int)
     filter_month = request.args.get('month', type=int)
 
-    # Consulta base
     query = Expense.query
 
-    # Aplicar filtros si fueron seleccionados
     if filter_year and filter_month:
         query = query.filter(extract('year', Expense.date) == filter_year, 
                              extract('month', Expense.date) == filter_month)
 
-    # Ordenar y ejecutar
     expenses = query.order_by(Expense.date.desc()).all()
 
-    # --- Generar lista de fechas disponibles para el selector ---
-    # Obtenemos todas las fechas únicas para poblar el dropdown
+    # Datos para el selector de fechas
     all_dates = db.session.query(Expense.date).all()
     available_dates = set()
     for (d,) in all_dates:
         available_dates.add((d.year, d.month))
     
-    # Ordenar fechas (más reciente primero)
     available_dates = sorted(list(available_dates), reverse=True)
 
-    # Lista de nombres de meses para mostrar bonito en el HTML
     month_names = {
         1: "Enero", 2: "Febrero", 3: "Marzo", 4: "Abril", 5: "Mayo", 6: "Junio",
         7: "Julio", 8: "Agosto", 9: "Septiembre", 10: "Octubre", 11: "Noviembre", 12: "Diciembre"
@@ -86,7 +77,6 @@ def home():
                            sel_year=filter_year, 
                            sel_month=filter_month)
 
-# RUTA: Eliminar Gasto
 @app.route('/delete/<int:id>', methods=['POST'])
 def delete_expense(id):
     try:
@@ -97,12 +87,24 @@ def delete_expense(id):
     except Exception as e:
         return f"Error al eliminar: {e}"
 
-# API JSON para el Gráfico
+# API JSON
 @app.route('/api/chart-data')
 def chart_data():
-    expenses = Expense.query.all()
-    data = {}
+    # 1. Lee los mismos filtros de la URL
+    filter_year = request.args.get('year', type=int)
+    filter_month = request.args.get('month', type=int)
+
+    query = Expense.query
+
+    # 2. Aplica el filtro si existe
+    if filter_year and filter_month:
+        query = query.filter(extract('year', Expense.date) == filter_year, 
+                             extract('month', Expense.date) == filter_month)
     
+    expenses = query.all()
+    
+    # 3. Procesa los datos filtrados
+    data = {}
     for expense in expenses:
         if expense.category in data:
             data[expense.category] += expense.amount
@@ -114,6 +116,5 @@ def chart_data():
     
     return jsonify({'labels': labels, 'data': values})
 
-# --- Ejecución ---
 if __name__ == '__main__':
     app.run(debug=True)
