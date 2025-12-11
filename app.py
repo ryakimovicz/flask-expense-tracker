@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify, Response
+from flask import Flask, render_template, request, redirect, url_for, jsonify, Response, flash
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import extract
 from datetime import datetime
@@ -10,11 +10,13 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///expenses.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# CLAVE SECRETA (Nueva): Necesaria para las sesiones y los mensajes flash
+# En producción, esto debería ser una variable de entorno aleatoria
+app.secret_key = 'mi_clave_secreta_super_segura'
+
 db = SQLAlchemy(app)
 
 # --- Modelos ---
-
-# Configuración de Usuario
 class UserSettings(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     budget_limit = db.Column(db.Float, nullable=False, default=50000.0)
@@ -32,12 +34,10 @@ class Expense(db.Model):
 # --- Inicialización ---
 with app.app_context():
     db.create_all()
-    
     if not UserSettings.query.first():
         default_settings = UserSettings(budget_limit=50000.0)
         db.session.add(default_settings)
         db.session.commit()
-        print("⚙️ Configuración inicial creada.")
 
 # --- Rutas ---
 @app.route('/', methods=['GET', 'POST'])
@@ -55,11 +55,13 @@ def home():
             db.session.add(new_expense)
             db.session.commit()
             
+            # Mensaje de éxito
+            flash('¡Gasto agregado correctamente!', 'success')
             return redirect(url_for('home'))
         except Exception as e:
-            return f"Ocurrió un error al guardar: {e}"
+            flash(f'Error al guardar: {e}', 'error')
+            return redirect(url_for('home'))
 
-    # Filtros
     filter_year = request.args.get('year', type=int)
     filter_month = request.args.get('month', type=int)
 
@@ -71,7 +73,6 @@ def home():
 
     expenses = query.order_by(Expense.date.desc()).all()
 
-    # --- CÁLCULO DE PRESUPUESTO (Desde Base de Datos) ---
     settings = UserSettings.query.get(1)
     budget_limit = settings.budget_limit if settings else 0
     
@@ -87,7 +88,6 @@ def home():
     else:
         progress_color = "bg-red-500"
 
-    # Datos para selectores
     all_dates = db.session.query(Expense.date).all()
     available_dates = set()
     for (d,) in all_dates:
@@ -110,19 +110,17 @@ def home():
                            percentage=percentage,
                            progress_color=progress_color)
 
-# Actualizar Presupuesto
 @app.route('/update_budget', methods=['POST'])
 def update_budget():
     try:
         new_limit = float(request.form['budget'])
-        
         settings = UserSettings.query.get(1)
         if settings:
             settings.budget_limit = new_limit
             db.session.commit()
-            
+            flash('Presupuesto actualizado.', 'success')
     except:
-        pass 
+        flash('Error al actualizar el presupuesto.', 'error')
     return redirect(url_for('home'))
 
 @app.route('/delete/<int:id>', methods=['POST'])
@@ -131,9 +129,11 @@ def delete_expense(id):
         expense_to_delete = Expense.query.get_or_404(id)
         db.session.delete(expense_to_delete)
         db.session.commit()
+        flash('Gasto eliminado.', 'success')
         return redirect(url_for('home'))
     except Exception as e:
-        return f"Error al eliminar: {e}"
+        flash('Error al eliminar.', 'error')
+        return redirect(url_for('home'))
 
 @app.route('/api/chart-data')
 def chart_data():

@@ -14,7 +14,20 @@
             <h1>💰 Control de Gastos</h1>
         </header>
 
-        <!-- SECCIÓN DE PRESUPUESTO -->
+        <!-- BLOQUE DE NOTIFICACIONES (FLASH MESSAGES) -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div id="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Sección de Presupuesto -->
         <section class="budget-section">
             <div class="budget-header">
                 <h3>Presupuesto Mensual</h3>
@@ -68,7 +81,7 @@
             </form>
         </section>
 
-        <!-- Barra de Filtros -->
+        <!-- Filtros y Exportación -->
         <section class="filter-section">
             <div class="filter-left">
                 <form action="/" method="GET" class="filter-form">
@@ -106,6 +119,16 @@
                     window.location.href = '/'; 
                 }
             });
+
+            // Auto-ocultar alertas después de 3 segundos
+            setTimeout(function() {
+                const alerts = document.getElementById('flash-messages');
+                if (alerts) {
+                    alerts.style.transition = 'opacity 0.5s ease';
+                    alerts.style.opacity = '0';
+                    setTimeout(() => alerts.remove(), 500);
+                }
+            }, 3000);
         </script>
 
         <section class="table-section">

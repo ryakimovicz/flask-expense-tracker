@@ -296,3 +296,31 @@ th {
     font-size: 0.9rem;
     color: var(--text-dark);
 }
+
+/* Alertas Flash */
+.alert {
+    padding: 12px 20px;
+    margin-bottom: 20px;
+    border-radius: 6px;
+    font-weight: 500;
+    text-align: center;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from { transform: translateY(-10px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.alert-success {
+    background-color: #dcfce7; /* Verde claro */
+    color: #166534;            /* Verde oscuro */
+    border: 1px solid #bbf7d0;
+}
+
+.alert-error {
+    background-color: #fee2e2; /* Rojo claro */
+    color: #991b1b;            /* Rojo oscuro */
+    border: 1px solid #fecaca;
+}
