@@ -53,6 +53,17 @@ def home():
     expenses = Expense.query.order_by(Expense.date.desc()).all()
     return render_template('index.html', expenses=expenses)
 
+# RUTA NUEVA: Eliminar Gasto
+@app.route('/delete/<int:id>', methods=['POST'])
+def delete_expense(id):
+    try:
+        expense_to_delete = Expense.query.get_or_404(id)
+        db.session.delete(expense_to_delete)
+        db.session.commit()
+        return redirect(url_for('home'))
+    except Exception as e:
+        return f"Error al eliminar: {e}"
+
 @app.route('/api/chart-data')
 def chart_data():
     # Agrupamos los gastos por categoría

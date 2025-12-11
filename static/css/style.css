@@ -139,3 +139,19 @@ th {
     max-width: 100%;
     max-height: 350px;
 }
+
+/* Botón Eliminar */
+.btn-delete {
+    background-color: #ef4444; /* Rojo */
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: 0.2s;
+}
+
+.btn-delete:hover {
+    background-color: #dc2626; /* Rojo más oscuro */
+}

@@ -14,7 +14,7 @@
             <h1>💰 Control de Gastos</h1>
         </header>
 
-        <!-- Sección de Gráfico (NUEVO) -->
+        <!-- Sección de Gráfico -->
         <section class="chart-section">
             <canvas id="expenseChart"></canvas>
         </section>
@@ -57,6 +57,7 @@
                         <th>Descripción</th>
                         <th>Categoría</th>
                         <th>Monto</th>
+                        <th>Acciones</th> <!-- Nueva Columna -->
                     </tr>
                 </thead>
                 <tbody>
@@ -66,10 +67,16 @@
                             <td>{{ expense.description }}</td>
                             <td><span class="badge">{{ expense.category }}</span></td>
                             <td class="amount">${{ expense.amount }}</td>
+                            <!-- Botón de Eliminar -->
+                            <td>
+                                <form action="{{ url_for('delete_expense', id=expense.id) }}" method="POST" style="display:inline;">
+                                    <button type="submit" class="btn-delete" onclick="return confirm('¿Seguro que quieres borrar este gasto?')">Eliminar</button>
+                                </form>
+                            </td>
                         </tr>
                     {% else %}
                         <tr>
-                            <td colspan="4" style="text-align:center;">No hay gastos registrados.</td>
+                            <td colspan="5" style="text-align:center;">No hay gastos registrados.</td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -77,10 +84,7 @@
         </section>
     </div>
 
-    <!-- Scripts (NUEVO) -->
-    <!-- 1. Librería Chart.js desde CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- 2. Nuestro script personalizado -->
     <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 
 </body>
