@@ -1,14 +1,13 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import extract
 from datetime import datetime
 
 # --- Configuración ---
 app = Flask(__name__)
-# Configuración de la base de datos SQLite
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///expenses.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Inicializar la base de datos
 db = SQLAlchemy(app)
 
 # --- Modelos ---
@@ -29,18 +28,16 @@ with app.app_context():
 # --- Rutas ---
 @app.route('/', methods=['GET', 'POST'])
 def home():
+    # 1. Lógica POST (Agregar Gasto)
     if request.method == 'POST':
         try:
-            # Obtener datos del formulario
             date_str = request.form['date']
             description = request.form['description']
             category = request.form['category']
             amount = float(request.form['amount'])
             
-            # Convertir fecha de string a objeto date
             date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
             
-            # Crear y guardar el gasto
             new_expense = Expense(date=date_obj, description=description, category=category, amount=amount)
             db.session.add(new_expense)
             db.session.commit()
@@ -49,11 +46,47 @@ def home():
         except Exception as e:
             return f"Ocurrió un error al guardar: {e}"
 
-    # Obtener gastos para mostrar en la tabla
-    expenses = Expense.query.order_by(Expense.date.desc()).all()
-    return render_template('index.html', expenses=expenses)
+    # 2. Lógica GET (Mostrar y Filtrar)
+    
+    # Obtener parámetros de filtro de la URL (si existen)
+    filter_year = request.args.get('year', type=int)
+    filter_month = request.args.get('month', type=int)
 
-# RUTA NUEVA: Eliminar Gasto
+    # Consulta base
+    query = Expense.query
+
+    # Aplicar filtros si fueron seleccionados
+    if filter_year and filter_month:
+        query = query.filter(extract('year', Expense.date) == filter_year, 
+                             extract('month', Expense.date) == filter_month)
+
+    # Ordenar y ejecutar
+    expenses = query.order_by(Expense.date.desc()).all()
+
+    # --- Generar lista de fechas disponibles para el selector ---
+    # Obtenemos todas las fechas únicas para poblar el dropdown
+    all_dates = db.session.query(Expense.date).all()
+    available_dates = set()
+    for (d,) in all_dates:
+        available_dates.add((d.year, d.month))
+    
+    # Ordenar fechas (más reciente primero)
+    available_dates = sorted(list(available_dates), reverse=True)
+
+    # Lista de nombres de meses para mostrar bonito en el HTML
+    month_names = {
+        1: "Enero", 2: "Febrero", 3: "Marzo", 4: "Abril", 5: "Mayo", 6: "Junio",
+        7: "Julio", 8: "Agosto", 9: "Septiembre", 10: "Octubre", 11: "Noviembre", 12: "Diciembre"
+    }
+
+    return render_template('index.html', 
+                           expenses=expenses, 
+                           available_dates=available_dates, 
+                           month_names=month_names,
+                           sel_year=filter_year, 
+                           sel_month=filter_month)
+
+# RUTA: Eliminar Gasto
 @app.route('/delete/<int:id>', methods=['POST'])
 def delete_expense(id):
     try:
@@ -64,9 +97,9 @@ def delete_expense(id):
     except Exception as e:
         return f"Error al eliminar: {e}"
 
+# API JSON para el Gráfico
 @app.route('/api/chart-data')
 def chart_data():
-    # Agrupamos los gastos por categoría
     expenses = Expense.query.all()
     data = {}
     
@@ -76,7 +109,6 @@ def chart_data():
         else:
             data[expense.category] = expense.amount
             
-    # Preparamos las listas para Chart.js
     labels = list(data.keys())
     values = list(data.values())
     

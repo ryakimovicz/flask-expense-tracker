@@ -142,7 +142,7 @@ th {
 
 /* Botón Eliminar */
 .btn-delete {
-    background-color: #ef4444; /* Rojo */
+    background-color: #ef4444;
     color: white;
     border: none;
     padding: 6px 12px;
@@ -153,5 +153,47 @@ th {
 }
 
 .btn-delete:hover {
-    background-color: #dc2626; /* Rojo más oscuro */
+    background-color: #dc2626;
+}
+
+/* Filtros */
+.filter-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #e5e7eb;
+    padding: 10px 15px;
+    border-radius: 8px 8px 0 0; /* Redondeado solo arriba */
+    margin-bottom: 0; /* Pegado a la tabla */
+    border: 1px solid var(--border);
+    border-bottom: none;
+}
+
+.filter-form {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.filter-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.btn-reset {
+    font-size: 0.85rem;
+    color: #ef4444;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.btn-reset:hover {
+    text-decoration: underline;
+}
+
+/* Ajuste para que la tabla se pegue al filtro */
+.table-section {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
 }
