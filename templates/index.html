@@ -14,10 +14,32 @@
             <h1>💰 Control de Gastos</h1>
         </header>
 
+        <!-- SECCIÓN DE PRESUPUESTO -->
+        <section class="budget-section">
+            <div class="budget-header">
+                <h3>Presupuesto Mensual</h3>
+                <form action="/update_budget" method="POST" class="budget-form">
+                    <input type="number" name="budget" value="{{ budget_limit }}" step="100">
+                    <button type="submit" class="btn-sm">Actualizar</button>
+                </form>
+            </div>
+            
+            <div class="progress-container">
+                <div class="progress-bar {{ progress_color }}" style="width: {{ percentage }}%;"></div>
+            </div>
+            
+            <div class="budget-info">
+                <span>Gastado: <strong>${{ total_spent }}</strong></span>
+                <span>Meta: <strong>${{ budget_limit }}</strong></span>
+            </div>
+        </section>
+
+        <!-- Sección de Gráfico -->
         <section class="chart-section">
             <canvas id="expenseChart"></canvas>
         </section>
 
+        <!-- Formulario -->
         <section class="form-section">
             <form action="/" method="POST">
                 <div class="form-group">
@@ -46,7 +68,7 @@
             </form>
         </section>
 
-        <!-- Barra de Filtros y Exportación -->
+        <!-- Barra de Filtros -->
         <section class="filter-section">
             <div class="filter-left">
                 <form action="/" method="GET" class="filter-form">
@@ -60,17 +82,13 @@
                             </option>
                         {% endfor %}
                     </select>
-                    
                     <input type="hidden" name="year" id="inputYear">
                     <input type="hidden" name="month" id="inputMonth">
                 </form>
-                
                 {% if sel_year %}
                     <a href="/" class="btn-reset">Borrar</a>
                 {% endif %}
             </div>
-
-            <!-- Botón de Exportar -->
             <a href="{{ url_for('export_data', year=sel_year, month=sel_month) }}" class="btn-export">
                 📄 Exportar CSV
             </a>

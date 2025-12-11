@@ -12,6 +12,8 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
+BUDGET_LIMIT = 50000.0 
+
 # --- Modelos ---
 class Expense(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -59,6 +61,22 @@ def home():
 
     expenses = query.order_by(Expense.date.desc()).all()
 
+    # --- CÁLCULO DE PRESUPUESTO ---
+    total_spent = sum(e.amount for e in expenses)
+    budget_limit = BUDGET_LIMIT
+    
+    # Calcular porcentaje
+    percentage = (total_spent / budget_limit * 100) if budget_limit > 0 else 0
+    percentage = min(percentage, 100)
+
+    # Determinar color
+    if percentage < 50:
+        progress_color = "bg-green-500"
+    elif percentage < 80:
+        progress_color = "bg-yellow-500"
+    else:
+        progress_color = "bg-red-500"
+
     # Datos para selectores
     all_dates = db.session.query(Expense.date).all()
     available_dates = set()
@@ -76,7 +94,22 @@ def home():
                            available_dates=available_dates, 
                            month_names=month_names,
                            sel_year=filter_year, 
-                           sel_month=filter_month)
+                           sel_month=filter_month,
+                           total_spent=total_spent,
+                           budget_limit=budget_limit,
+                           percentage=percentage,
+                           progress_color=progress_color)
+
+# Actualizar Presupuesto
+@app.route('/update_budget', methods=['POST'])
+def update_budget():
+    global BUDGET_LIMIT
+    try:
+        new_limit = float(request.form['budget'])
+        BUDGET_LIMIT = new_limit
+    except:
+        pass
+    return redirect(url_for('home'))
 
 @app.route('/delete/<int:id>', methods=['POST'])
 def delete_expense(id):
@@ -113,7 +146,6 @@ def chart_data():
     
     return jsonify({'labels': labels, 'data': values})
 
-# Exportar a CSV
 @app.route('/export')
 def export_data():
     filter_year = request.args.get('year', type=int)
@@ -130,18 +162,13 @@ def export_data():
 
     expenses = query.order_by(Expense.date.desc()).all()
 
-    # Crea el archivo CSV en memoria
     output = io.StringIO()
     writer = csv.writer(output)
-    
-    # Escribir encabezados
     writer.writerow(['ID', 'Fecha', 'Descripción', 'Categoría', 'Monto'])
     
-    # Escribir filas
     for expense in expenses:
         writer.writerow([expense.id, expense.date, expense.description, expense.category, expense.amount])
     
-    # Prepara la respuesta de descarga
     return Response(
         output.getvalue(),
         mimetype="text/csv",
