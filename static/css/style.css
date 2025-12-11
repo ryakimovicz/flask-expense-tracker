@@ -121,3 +121,21 @@ th {
         grid-template-columns: 1fr;
     }
 }
+
+/* Gráfico */
+.chart-section {
+    background-color: var(--card-bg);
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+    /* Centrar y limitar tamaño */
+    display: flex;
+    justify-content: center;
+    max-height: 400px;
+}
+
+#expenseChart {
+    max-width: 100%;
+    max-height: 350px;
+}

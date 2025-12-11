@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
@@ -52,6 +52,24 @@ def home():
     # Obtener gastos para mostrar en la tabla
     expenses = Expense.query.order_by(Expense.date.desc()).all()
     return render_template('index.html', expenses=expenses)
+
+@app.route('/api/chart-data')
+def chart_data():
+    # Agrupamos los gastos por categoría
+    expenses = Expense.query.all()
+    data = {}
+    
+    for expense in expenses:
+        if expense.category in data:
+            data[expense.category] += expense.amount
+        else:
+            data[expense.category] = expense.amount
+            
+    # Preparamos las listas para Chart.js
+    labels = list(data.keys())
+    values = list(data.values())
+    
+    return jsonify({'labels': labels, 'data': values})
 
 # --- Ejecución ---
 if __name__ == '__main__':

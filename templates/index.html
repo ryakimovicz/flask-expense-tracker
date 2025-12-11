@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestor de Gastos</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <!-- Fuente Google -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -15,7 +14,12 @@
             <h1>💰 Control de Gastos</h1>
         </header>
 
-        <!-- Formulario de Carga -->
+        <!-- Sección de Gráfico (NUEVO) -->
+        <section class="chart-section">
+            <canvas id="expenseChart"></canvas>
+        </section>
+
+        <!-- Formulario -->
         <section class="form-section">
             <form action="/" method="POST">
                 <div class="form-group">
@@ -40,11 +44,11 @@
                     <label>Monto ($)</label>
                     <input type="number" name="amount" step="0.01" placeholder="0.00" required>
                 </div>
-                <button type="submit" class="btn-add">Agregar Gasto</button>
+                <button type="submit" class="btn-add">Agregar</button>
             </form>
         </section>
 
-        <!-- Tabla de Resultados -->
+        <!-- Tabla -->
         <section class="table-section">
             <table>
                 <thead>
@@ -72,6 +76,12 @@
             </table>
         </section>
     </div>
+
+    <!-- Scripts (NUEVO) -->
+    <!-- 1. Librería Chart.js desde CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- 2. Nuestro script personalizado -->
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 
 </body>
 </html>
