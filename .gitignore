@@ -1,0 +1,15 @@
+Python
+
+venv/
+pycache/
+*.pyc
+
+Base de datos (SQLite)
+
+instance/
+*.db
+*.sqlite3
+
+Archivos de sistema
+
+.DS_Store
